@@ -131,7 +131,7 @@ public class BaseException extends RuntimeException implements IObject, JPHPExce
 
             sb.append("#").append(i).append(" {main}");
         }
-        return new StringMemory(sb.toString());
+        return new StringMemory(sb);
     }
 
     @Override

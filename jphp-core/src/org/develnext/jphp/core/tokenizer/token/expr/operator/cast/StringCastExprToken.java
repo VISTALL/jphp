@@ -17,7 +17,7 @@ public class StringCastExprToken extends CastExprToken {
 
     @Override
     public Memory calc(Memory o1, Memory o2) {
-        return new StringMemory(o1.toString());
+        return new StringMemory(o1.toCharSequence());
     }
 
     @Override

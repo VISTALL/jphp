@@ -505,7 +505,7 @@ public class ExpressionStmtCompiler extends StmtCompiler {
                 return true;
             }
             case STRING: {
-                writeSysStaticCall(StringMemory.class, "valueOf", Memory.class, String.class);
+                writeSysStaticCall(StringMemory.class, "valueOf", Memory.class, CharSequence.class);
                 setStackPeekAsImmutable();
                 return true;
             }
@@ -2016,7 +2016,7 @@ public class ExpressionStmtCompiler extends StmtCompiler {
                 stackPush(Memory.Type.INT);
             } break;
             case STRING: {
-                writeSysStaticCall(StringMemory.class, "toNumeric", Memory.class, String.class);
+                writeSysStaticCall(StringMemory.class, "toNumeric", Memory.class, CharSequence.class);
                 writeSysDynamicCall(Memory.class, "toLong", Long.TYPE);
             } break;
             default: {
@@ -2043,7 +2043,7 @@ public class ExpressionStmtCompiler extends StmtCompiler {
                 stackPush(Memory.Type.DOUBLE);
             } break;
             case STRING: {
-                writeSysStaticCall(StringMemory.class, "toNumeric", Memory.class, String.class);
+                writeSysStaticCall(StringMemory.class, "toNumeric", Memory.class, CharSequence.class);
                 writeSysDynamicCall(Memory.class, "toDouble", Double.TYPE);
             } break;
             default: {

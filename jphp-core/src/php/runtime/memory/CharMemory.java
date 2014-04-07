@@ -3,12 +3,13 @@ package php.runtime.memory;
 import php.runtime.common.StringUtils;
 import php.runtime.Memory;
 import php.runtime.memory.helper.CharArrayMemory;
+import php.runtime.util.CharSequenceByChar;
 
 public class CharMemory extends StringMemory {
     public final ReferenceMemory origin;
     public final int index;
 
-    public CharMemory(String value, ReferenceMemory origin, int index) {
+    public CharMemory(CharSequence value, ReferenceMemory origin, int index) {
         super(value);
         this.index = index;
         this.origin = origin;
@@ -18,11 +19,11 @@ public class CharMemory extends StringMemory {
         if (index < 0 || index >= memory.value.length()){
             return new CharMemory("", origin, index);
         } else {
-            return new CharMemory(String.valueOf(memory.value.charAt(index)), origin, index);
+            return new CharMemory(new CharSequenceByChar(memory.value.charAt(index)), origin, index);
         }
     }
 
-    private void makeString(String ch){
+    private void makeString(CharSequence ch){
         Memory v = origin.toValue();
 
         if (v instanceof CharArrayMemory) {
@@ -77,7 +78,7 @@ public class CharMemory extends StringMemory {
     }
 
     @Override
-    public Memory assign(String value) {
+    public Memory assign(CharSequence value) {
         makeString(value);
         return new StringMemory(value);
     }

@@ -1044,7 +1044,7 @@ public class ArrayMemory extends Memory implements Iterable<ReferenceMemory>, Tr
     }
 
     @Override
-    public boolean identical(String value) {
+    public boolean identical(CharSequence value) {
         return false;
     }
 

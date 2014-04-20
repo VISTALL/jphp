@@ -1,16 +1,17 @@
 package php.runtime.memory;
 
 import php.runtime.Memory;
+import php.runtime.util.EmptyCharSequence;
 
 public class StringBuilderMemory extends StringMemory {
     StringBuilder builder = null;
     StringMemory cache = null;
 
     public StringBuilderMemory(){
-        super("");
+        super(EmptyCharSequence.INSTANCE);
     }
 
-    public StringBuilderMemory(String value) {
+    public StringBuilderMemory(CharSequence value) {
         super(value);
     }
 
@@ -22,18 +23,22 @@ public class StringBuilderMemory extends StringMemory {
     public Memory toImmutable() {
         if (cache != null)
             return cache;
-        return cache = new StringMemory(toString());
+        return cache = new StringMemory(builder);
     }
 
     @Override
     public String toString() {
         if (builder != null){
-            value = builder.toString();
+            value = builder;
             builder = null;
         }
-        return value;
+        return value.toString();
     }
 
+    @Override
+    public CharSequence toCharSequence() {
+        return builder;
+    }
 
     @Override
     public Memory toNumeric(){
@@ -55,19 +60,19 @@ public class StringBuilderMemory extends StringMemory {
                 if (memory instanceof FalseMemory)
                     break;
                 else
-                    builder.append(memory.toString());
+                    builder.append(memory.toCharSequence());
                 break;
             case NULL: break;
             case INT: builder.append(((LongMemory)memory).value); break;
             case DOUBLE: builder.append(((DoubleMemory)memory).value); break;
-            case STRING: builder.append(memory.toString()); break;
+            case STRING: builder.append(memory.toCharSequence()); break;
             case REFERENCE: append(memory.toImmutable()); break;
             default:
-                builder.append(memory.toString());
+                builder.append(memory.toCharSequence());
         }
     }
 
-    public void append(String value){
+    public void append(CharSequence value){
         resolveBuilder();
         this.builder.append(value);
     }

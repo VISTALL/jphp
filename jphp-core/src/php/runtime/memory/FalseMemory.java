@@ -222,7 +222,7 @@ public class FalseMemory extends Memory {
     }
 
     @Override
-    public boolean identical(String value) {
+    public boolean identical(CharSequence value) {
         return false;
     }
 }

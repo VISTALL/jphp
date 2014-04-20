@@ -27,7 +27,7 @@ public class ArrayKeyMemory extends ReferenceMemory {
     }
 
     @Override
-    public Memory assign(String memory) {
+    public Memory assign(CharSequence memory) {
         array.renameKey(value, new StringMemory(memory));
         return super.assign(memory);
     }

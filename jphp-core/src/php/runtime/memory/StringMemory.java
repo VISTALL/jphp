@@ -1,25 +1,28 @@
 package php.runtime.memory;
 
+import php.runtime.Memory;
 import php.runtime.OperatorUtils;
 import php.runtime.env.TraceInfo;
-import php.runtime.Memory;
+import php.runtime.util.CharSequenceByChar;
+import php.runtime.util.CharSequenceUtil;
+import php.runtime.util.EmptyCharSequence;
 
 public class StringMemory extends Memory {
-    String value = "";
+    CharSequence value = EmptyCharSequence.INSTANCE;
 
     protected final static StringMemory[] CACHED_CHARS;
 
-    public StringMemory(String value) {
+    public StringMemory(CharSequence value) {
         super(Type.STRING);
         this.value = value;
     }
 
     public StringMemory(char ch){
-        this(String.valueOf(ch));
+        this(new CharSequenceByChar(ch));
     }
 
-    public static Memory valueOf(String value){
-        if (value.isEmpty())
+    public static Memory valueOf(CharSequence value){
+        if (CharSequenceUtil.isEmpty(value))
             return Memory.CONST_EMPTY_STRING;
 
         if (value.length() == 1) {
@@ -41,15 +44,20 @@ public class StringMemory extends Memory {
 
     @Override
     public boolean toBoolean() {
-        return (value != null && !value.isEmpty() && !value.equals("0"));
+        return !CharSequenceUtil.isOneCharEquals(value, '0');
     }
 
     @Override
     public String toString() {
+        return value.toString();
+    }
+
+    @Override
+    public CharSequence toCharSequence() {
         return value;
     }
 
-    public static Memory toLong(String value){
+    public static Memory toLong(CharSequence value){
         int len = value.length();
         if (len == 0)
             return null;
@@ -73,10 +81,10 @@ public class StringMemory extends Memory {
         if (neg)
             return null;
 
-        return LongMemory.valueOf(Long.parseLong(value));
+        return LongMemory.valueOf(CharSequenceUtil.parseLong(value));
     }
 
-    public static Memory toNumeric(String value){
+    public static Memory toNumeric(CharSequence value){
         return toNumeric(value, false, CONST_INT_0);
     }
 
@@ -84,7 +92,7 @@ public class StringMemory extends Memory {
         return toNumeric(value, true, CONST_INT_0);
     }
 
-    public static Memory toNumeric(String value, boolean onlyInt, Memory def){
+    public static Memory toNumeric(CharSequence value, boolean onlyInt, Memory def){
         int len = value.length();
         boolean real = false;
         int i = 0;
@@ -135,17 +143,17 @@ public class StringMemory extends Memory {
         }
         if (real) {
             if (len == i && start == 0)
-                return new DoubleMemory(Double.parseDouble(value));
+                return new DoubleMemory(Double.parseDouble(value.toString()));
             else
-                return new DoubleMemory(Double.parseDouble(value.substring(start, i)));
+                return new DoubleMemory(Double.parseDouble(value.subSequence(start, i).toString()));
         } else {
             if (len == 0)
                 return def;
 
             if (len == i && start == 0){
-                return LongMemory.valueOf(Long.parseLong(value));
+                return LongMemory.valueOf(CharSequenceUtil.parseLong(value));
             } else {
-                return LongMemory.valueOf(Long.parseLong(value.substring(start, i)));
+                return LongMemory.valueOf(CharSequenceUtil.parseLong(value.subSequence(start, i)));
             }
         }
     }
@@ -157,8 +165,8 @@ public class StringMemory extends Memory {
 
     @Override
     public Memory inc() {
-        String str = toString();
-        if (str.isEmpty())
+        CharSequence str = toCharSequence();
+        if (CharSequenceUtil.isEmpty(str))
             return CONST_INT_1;
 
         char ch = str.charAt(str.length() - 1);
@@ -217,9 +225,9 @@ public class StringMemory extends Memory {
             }
 
             if (i > 0)
-                sb.insert(0, str.substring(0, i));
+                sb.insert(0, str.subSequence(0, i));
 
-            return new StringMemory(sb.toString());
+            return new StringMemory(sb);
         }
 
         return ret.inc();
@@ -227,10 +235,10 @@ public class StringMemory extends Memory {
 
     @Override
     public Memory dec() {
-        String str = toString();
+        CharSequence str = toCharSequence();
         Memory ret = toNumeric(str, false, null);
         // hack for php
-        if (ret == null || str.isEmpty() || !Character.isDigit(str.charAt(str.length() - 1)))
+        if (ret == null || CharSequenceUtil.isEmpty(str) || !Character.isDigit(str.charAt(str.length() - 1)))
             return this;
         return ret.dec();
     }
@@ -276,22 +284,22 @@ public class StringMemory extends Memory {
     }
 
     @Override
-    public Memory div(String value) {
+    public Memory div(CharSequence value) {
         return toNumeric().div(value);
     }
 
     @Override
     public boolean identical(Memory memory) {
-        return memory.getRealType() == Type.STRING && toString().equals(memory.toString());
+        return memory.getRealType() == Type.STRING && toCharSequence().equals(memory.toCharSequence());
     }
 
     @Override
     public boolean equal(Memory memory) {
         switch (memory.type){
-            case NULL: return toString().equals("");
+            case NULL: return CharSequenceUtil.isEmpty(value);
             case DOUBLE:
             case INT: return toNumeric().equal(memory);
-            case STRING: return toString().equals(memory.toString());
+            case STRING: return toCharSequence().equals(memory.toCharSequence());
             case OBJECT:
             case ARRAY: return false;
             default: return equal(memory.toValue());
@@ -309,8 +317,8 @@ public class StringMemory extends Memory {
     }
 
     @Override
-    public boolean equal(String value) {
-        return toString().equals(value);
+    public boolean equal(CharSequence value) {
+        return CharSequenceUtil.equals(this.value, value);
     }
 
     @Override
@@ -324,74 +332,74 @@ public class StringMemory extends Memory {
     }
 
     @Override
-    public String concat(Memory memory) {
+    public CharSequence concat(Memory memory) {
         switch (memory.type){
-            case STRING: return toString().concat(memory.toString());
+            case STRING: return CharSequenceUtil.concat(this.value, memory.toCharSequence());
             case REFERENCE: return concat(memory.toImmutable());
             default:
-                return (toString() + memory.toString());
+                return CharSequenceUtil.concat(this.value, memory.toCharSequence());
         }
     }
 
     @Override
     public boolean smaller(Memory memory) {
         switch (memory.type){
-            case STRING: return toString().compareTo(memory.toString()) < 0;
+            case STRING: return CharSequenceUtil.compareTo(value, memory.toCharSequence()) < 0;
             case REFERENCE: return smaller(memory.toImmutable());
         }
         return toNumeric().smaller(memory);
     }
 
     @Override
-    public boolean smaller(String value) {
-        return toString().compareTo(value) < 0;
+    public boolean smaller(CharSequence value) {
+        return CharSequenceUtil.compareTo(this.value, value) < 0;
     }
 
     @Override
     public boolean smallerEq(Memory memory) {
         switch (memory.type){
-            case STRING: return toString().compareTo(memory.toString()) <= 0;
+            case STRING: return CharSequenceUtil.compareTo(value, memory.toCharSequence()) <= 0;
             case REFERENCE: return smaller(memory.toImmutable());
         }
         return toNumeric().smallerEq(memory);
     }
 
     @Override
-    public boolean smallerEq(String value) {
-        return toString().compareTo(value) <= 0;
+    public boolean smallerEq(CharSequence value) {
+        return CharSequenceUtil.compareTo(this.value, value) <= 0;
     }
 
     @Override
     public boolean greater(Memory memory) {
         switch (memory.type){
-            case STRING: return toString().compareTo(memory.toString()) > 0;
+            case STRING: return CharSequenceUtil.compareTo(value, memory.toCharSequence()) > 0;
             case REFERENCE: return smaller(memory.toImmutable());
         }
         return toNumeric().greater(memory);
     }
 
     @Override
-    public boolean greater(String value) {
-        return toString().compareTo(value) > 0;
+    public boolean greater(CharSequence value) {
+        return CharSequenceUtil.compareTo(this.value, value) > 0;
     }
 
     @Override
     public boolean greaterEq(Memory memory) {
         switch (memory.type){
-            case STRING: return toString().compareTo(memory.toString()) >= 0;
+            case STRING: return CharSequenceUtil.compareTo(value, memory.toCharSequence()) >= 0;
             case REFERENCE: return smaller(memory.toImmutable());
         }
         return toNumeric().greaterEq(memory);
     }
 
     @Override
-    public boolean greaterEq(String value) {
-        return toString().compareTo(value) >= 0;
+    public boolean greaterEq(CharSequence value) {
+        return CharSequenceUtil.compareTo(this.value, value) >= 0;
     }
 
     @Override
-    public String concat(String value) {
-        return toString().concat(value);
+    public CharSequence concat(CharSequence value) {
+        return CharSequenceUtil.concat(this.value, value);
     }
 
     @Override
@@ -403,7 +411,7 @@ public class StringMemory extends Memory {
     }
 
     @Override
-    public Memory bitAnd(String memory) {
+    public Memory bitAnd(CharSequence memory) {
         return OperatorUtils.binaryAnd(this, new StringMemory(memory));
     }
 
@@ -416,7 +424,7 @@ public class StringMemory extends Memory {
     }
 
     @Override
-    public Memory bitOr(String memory) {
+    public Memory bitOr(CharSequence memory) {
         return OperatorUtils.binaryOr(this, new StringMemory(memory));
     }
 
@@ -429,7 +437,7 @@ public class StringMemory extends Memory {
     }
 
     @Override
-    public Memory bitXor(String memory) {
+    public Memory bitXor(CharSequence memory) {
         return OperatorUtils.binaryXor(this, new StringMemory(memory));
     }
 
@@ -451,7 +459,7 @@ public class StringMemory extends Memory {
     }
 
     @Override
-    public Memory bitShr(String memory) {
+    public Memory bitShr(CharSequence memory) {
         return toLongNumeric().bitShr(memory);
         //return OperatorUtils.binaryShr(this, new StringMemory(memory));
     }
@@ -465,7 +473,7 @@ public class StringMemory extends Memory {
     }
 
     @Override
-    public Memory bitShl(String memory) {
+    public Memory bitShl(CharSequence memory) {
         return toLongNumeric().bitShl(memory);
         //return OperatorUtils.binaryShl(this, new StringMemory(memory));
     }
@@ -488,7 +496,7 @@ public class StringMemory extends Memory {
 
         switch (index.type){
             case STRING:
-                Memory tmp = StringMemory.toLong(index.toString());
+                Memory tmp = StringMemory.toLong(index.toCharSequence());
                 if (tmp != null)
                     _index = tmp.toInteger();
                 break;
@@ -497,7 +505,7 @@ public class StringMemory extends Memory {
                 _index = index.toInteger();
         }
 
-        if (_index < toString().length() && _index >= 0)
+        if (_index < toCharSequence().length() && _index >= 0)
             return getChar(value.charAt(_index));
         else
             return CONST_EMPTY_STRING;
@@ -506,7 +514,7 @@ public class StringMemory extends Memory {
     @Override
     public Memory valueOfIndex(TraceInfo trace, long index) {
         int _index = (int)index;
-        String string = toString();
+        CharSequence string = toCharSequence();
         if (_index >= 0 && _index < string.length())
             return getChar(string.charAt(_index));
         else
@@ -516,7 +524,7 @@ public class StringMemory extends Memory {
     @Override
     public Memory valueOfIndex(TraceInfo trace, double index) {
         int _index = (int)index;
-        String string = toString();
+        CharSequence string = toCharSequence();
         if (_index >= 0 && _index < string.length())
             return getChar(string.charAt(_index));
         else
@@ -526,7 +534,7 @@ public class StringMemory extends Memory {
     @Override
     public Memory valueOfIndex(TraceInfo trace, boolean index) {
         int _index = index ? 1 : 0;
-        String string = toString();
+        CharSequence string = toCharSequence();
         if (_index >= 0 && _index < string.length())
             return getChar(string.charAt(_index));
         else
@@ -541,7 +549,7 @@ public class StringMemory extends Memory {
         if (tmp != null)
             _index = tmp.toInteger();
 
-        String string = toString();
+        CharSequence string = toCharSequence();
         if (_index >= 0 && _index < string.length())
             return getChar(string.charAt(_index));
         else

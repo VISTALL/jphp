@@ -9,10 +9,12 @@ import java.nio.CharBuffer;
 public class CharArrayMemory extends StringMemory {
     protected CharBuffer buffer;
 
-    public CharArrayMemory(String value) {
+    public CharArrayMemory(CharSequence value) {
         super("");
         buffer = CharBuffer.allocate(value.length());
-        buffer.put(value);
+        for(int i = 0; i < value.length(); i++) {
+            buffer.put(value.charAt(i));
+        }
     }
 
     public CharArrayMemory(char ch) {
@@ -29,6 +31,11 @@ public class CharArrayMemory extends StringMemory {
     @Override
     public String toString() {
         return new String(buffer.array());
+    }
+
+    @Override
+    public CharSequence toCharSequence() {
+        return buffer;
     }
 
     @Override
@@ -98,7 +105,7 @@ public class CharArrayMemory extends StringMemory {
         return buffer.length();
     }
 
-    public void put(int index, String s) {
+    public void put(int index, CharSequence s) {
         int len = s.length();
         int sLen = buffer.limit();
 

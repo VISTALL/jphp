@@ -8,6 +8,8 @@ import php.runtime.lang.IObject;
 import php.runtime.lang.StdClass;
 import php.runtime.memory.*;
 import php.runtime.memory.helper.UndefinedMemory;
+import php.runtime.util.CharSequenceUtil;
+import php.runtime.util.EmptyCharSequence;
 
 abstract public class Memory {
 
@@ -94,7 +96,7 @@ abstract public class Memory {
     public static final Memory CONST_DOUBLE_1 = new DoubleMemory(1.0);
     public static final Memory CONST_DOUBLE_NAN = new DoubleMemory(Double.NaN);
 
-    public static final Memory CONST_EMPTY_STRING = new StringMemory("");
+    public static final Memory CONST_EMPTY_STRING = new StringMemory(EmptyCharSequence.INSTANCE);
 
     public boolean isNull(){
         return type == Type.NULL;
@@ -115,6 +117,11 @@ abstract public class Memory {
     abstract public boolean toBoolean();
     abstract public Memory toNumeric();
     abstract public String toString();
+
+    public CharSequence toCharSequence() {
+        return toString();
+    }
+
     public Memory toUnset() { return NULL; }
     public String toBinaryString(){
         return toString();
@@ -151,8 +158,8 @@ abstract public class Memory {
     public char toChar(){
         switch (type){
             case STRING:
-                String tmp = toString();
-                if (tmp.isEmpty())
+                CharSequence tmp = toCharSequence();
+                if (CharSequenceUtil.isEmpty(tmp))
                     return '\0';
                 else
                     return tmp.charAt(0);
@@ -240,39 +247,39 @@ abstract public class Memory {
     abstract public Memory negative();
 
     // CONCAT
-    public String concat(Memory memory){  return toString() + memory.toString(); }
-    public String concat(long value) { return toString() + value; }
-    public String concat(double value) { return toString() + new DoubleMemory(value).toString(); }
-    public String concat(boolean value) { return toString() + boolToString(value); }
-    public String concat(String value) { return toString() + value; }
+    public CharSequence concat(Memory memory){  return toString() + memory.toString(); }
+    public CharSequence concat(long value) { return toString() + value; }
+    public CharSequence concat(double value) { return toString() + new DoubleMemory(value).toString(); }
+    public CharSequence concat(boolean value) { return toString() + boolToString(value); }
+    public CharSequence concat(CharSequence value) { return toString() + value; }
 
     // PLUS
     abstract public Memory plus(Memory memory);
     public Memory plus(long value){ return new LongMemory(toLong() + value); }
     public Memory plus(double value){ return new DoubleMemory(toDouble() + value); }
     public Memory plus(boolean value){ return new LongMemory(toLong() + (value ? 1 : 0)); }
-    public Memory plus(String value){ return plus(StringMemory.toNumeric(value)); }
+    public Memory plus(CharSequence value){ return plus(StringMemory.toNumeric(value)); }
 
     // MINUS
     abstract public Memory minus(Memory memory);
     public Memory minus(long value){ return new LongMemory(toLong() - value); }
     public Memory minus(double value){ return new DoubleMemory(toDouble() - value); }
     public Memory minus(boolean value){ return new LongMemory(toLong() - (value ? 1 : 0)); }
-    public Memory minus(String value){ return minus(StringMemory.toNumeric(value)); }
+    public Memory minus(CharSequence value){ return minus(StringMemory.toNumeric(value)); }
 
     // MUL
     abstract public Memory mul(Memory memory);
     public Memory mul(long value){ return new LongMemory(toLong() * value); }
     public Memory mul(double value){ return new DoubleMemory(toDouble() * value); }
     public Memory mul(boolean value){ return LongMemory.valueOf(toLong() * (value ? 1 : 0));}
-    public Memory mul(String value){ return mul(StringMemory.toNumeric(value)); }
+    public Memory mul(CharSequence value){ return mul(StringMemory.toNumeric(value)); }
 
     // DIV
     abstract public Memory div(Memory memory);
     public Memory div(long value){ if(value==0) return FALSE; return new DoubleMemory(toDouble() / value); }
     public Memory div(double value){ if(value==0.0) return FALSE; return new DoubleMemory(toDouble() / value); }
     public Memory div(boolean value){ if(!value) return FALSE; return LongMemory.valueOf(toLong()); }
-    public Memory div(String value){ return div(StringMemory.toNumeric(value)); }
+    public Memory div(CharSequence value){ return div(StringMemory.toNumeric(value)); }
 
     // MOD
     public Memory mod(Memory memory) {
@@ -286,7 +293,7 @@ abstract public class Memory {
     public Memory mod(long value){ if (value==0) return FALSE; return LongMemory.valueOf(toLong() % value); }
     public Memory mod(double value){ return mod((long)value); }
     public Memory mod(boolean value){ if (!value) return FALSE; return LongMemory.valueOf(toLong() % 1); }
-    public Memory mod(String value){ return mod(StringMemory.toNumeric(value, true, CONST_INT_0)); }
+    public Memory mod(CharSequence value){ return mod(StringMemory.toNumeric(value, true, CONST_INT_0)); }
 
     // NOT
     public boolean not(){ return !toBoolean(); }
@@ -296,56 +303,56 @@ abstract public class Memory {
     public boolean equal(long value){ return toLong() == value; }
     public boolean equal(double value) { return DoubleMemory.almostEqual(toDouble(), value); }
     public boolean equal(boolean value) { return toBoolean() == value; }
-    public boolean equal(String value) { return equal(StringMemory.toNumeric(value)); }
+    public boolean equal(CharSequence value) { return equal(StringMemory.toNumeric(value)); }
 
     // IDENTICAL
     abstract public boolean identical(Memory memory);
     public boolean identical(long value) { return type == Type.INT && toLong() == value; }
     public boolean identical(double value) { return type == Type.DOUBLE && DoubleMemory.almostEqual(toDouble(), value); }
     public boolean identical(boolean value) { return type == Type.BOOL && value ? toImmutable() == TRUE : toImmutable() == FALSE; }
-    public boolean identical(String value) { return type == Type.STRING && toString().equals(value); }
+    public boolean identical(CharSequence value) { return type == Type.STRING && toCharSequence().equals(value); }
 
     // NOT EQUAL
     abstract public boolean notEqual(Memory memory);
     public boolean notEqual(long value){ return toLong() != value; }
     public boolean notEqual(double value) { return toDouble() != value; }
     public boolean notEqual(boolean value) { return toBoolean() != value; }
-    public boolean notEqual(String value) { return !toString().equals(value); }
+    public boolean notEqual(CharSequence value) { return !toString().equals(value); }
 
     // NOT IDENTICAL
     public boolean notIdentical(Memory memory) { return !identical(memory); }
     public boolean notIdentical(long memory) { return !identical(memory); }
     public boolean notIdentical(double memory) { return !identical(memory); }
     public boolean notIdentical(boolean memory) { return !identical(memory); }
-    public boolean notIdentical(String memory) { return !identical(memory); }
+    public boolean notIdentical(CharSequence memory) { return !identical(memory); }
 
     // SMALLER
     abstract public boolean smaller(Memory memory);
     public boolean smaller(long value) { return toDouble() < value; }
     public boolean smaller(double value) { return toDouble() < value; }
     public boolean smaller(boolean value) { return toDouble() < (value ? 1 : 0); }
-    public boolean smaller(String value) { return this.smaller(StringMemory.toNumeric(value)); }
+    public boolean smaller(CharSequence value) { return this.smaller(StringMemory.toNumeric(value)); }
 
     // SMALLER EQ
     abstract public boolean smallerEq(Memory memory);
     public boolean smallerEq(long value) { return toDouble() <= value; }
     public boolean smallerEq(double value) { return toDouble() <= value; }
     public boolean smallerEq(boolean value) { return toDouble() <= (value ? 1 : 0); }
-    public boolean smallerEq(String value) { return this.smallerEq(StringMemory.toNumeric(value)); }
+    public boolean smallerEq(CharSequence value) { return this.smallerEq(StringMemory.toNumeric(value)); }
 
     // GREATER
     abstract public boolean greater(Memory memory);
     public boolean greater(long value) { return toDouble() > value; }
     public boolean greater(double value) { return toDouble() > value; }
     public boolean greater(boolean value) { return toDouble() > (value ? 1 : 0); }
-    public boolean greater(String value) { return this.smaller(StringMemory.toNumeric(value)); }
+    public boolean greater(CharSequence value) { return this.smaller(StringMemory.toNumeric(value)); }
 
     // GREATER EQ
     abstract public boolean greaterEq(Memory memory);
     public boolean greaterEq(long value) { return toDouble() >= value; }
     public boolean greaterEq(double value) { return toDouble() >= value; }
     public boolean greaterEq(boolean value) { return toDouble() >= (value ? 1 : 0); }
-    public boolean greaterEq(String value) { return this.greaterEq(StringMemory.toNumeric(value)); }
+    public boolean greaterEq(CharSequence value) { return this.greaterEq(StringMemory.toNumeric(value)); }
 
 
     // BIT &
@@ -353,21 +360,21 @@ abstract public class Memory {
     public Memory bitAnd(long memory) { return LongMemory.valueOf( toLong() & memory ); }
     public Memory bitAnd(double memory) { return LongMemory.valueOf( toLong() & (long)memory ); }
     public Memory bitAnd(boolean memory) { return LongMemory.valueOf( toLong() & (memory ? 1 : 0) ); }
-    public Memory bitAnd(String memory) { return LongMemory.valueOf( toLong() & StringMemory.toNumeric(memory).toLong() ); }
+    public Memory bitAnd(CharSequence memory) { return LongMemory.valueOf( toLong() & StringMemory.toNumeric(memory).toLong() ); }
 
     // BIT |
     public Memory bitOr(Memory memory) { return LongMemory.valueOf( toLong() | memory.toLong() ); }
     public Memory bitOr(long memory) { return LongMemory.valueOf( toLong() | memory ); }
     public Memory bitOr(double memory) { return LongMemory.valueOf( toLong() | (long)memory ); }
     public Memory bitOr(boolean memory) { return LongMemory.valueOf( toLong() | (memory ? 1 : 0) ); }
-    public Memory bitOr(String memory) { return LongMemory.valueOf( toLong() | StringMemory.toNumeric(memory).toLong() ); }
+    public Memory bitOr(CharSequence memory) { return LongMemory.valueOf( toLong() | StringMemory.toNumeric(memory).toLong() ); }
 
     // BIT XOR ^
     public Memory bitXor(Memory memory) { return LongMemory.valueOf( toLong() ^ memory.toLong() ); }
     public Memory bitXor(long memory) { return LongMemory.valueOf( toLong() ^ memory ); }
     public Memory bitXor(double memory) { return LongMemory.valueOf( toLong() ^ (long)memory ); }
     public Memory bitXor(boolean memory) { return LongMemory.valueOf( toLong() ^ (memory ? 1 : 0) ); }
-    public Memory bitXor(String memory) { return LongMemory.valueOf( toLong() ^ StringMemory.toNumeric(memory).toLong() ); }
+    public Memory bitXor(CharSequence memory) { return LongMemory.valueOf( toLong() ^ StringMemory.toNumeric(memory).toLong() ); }
 
     // BIT not ~
     public Memory bitNot(){ return LongMemory.valueOf(~toLong()); }
@@ -377,14 +384,14 @@ abstract public class Memory {
     public Memory bitShr(long memory) { return LongMemory.valueOf( toLong() >> memory ); }
     public Memory bitShr(double memory) { return LongMemory.valueOf( toLong() >> (long)memory ); }
     public Memory bitShr(boolean memory) { return LongMemory.valueOf( toLong() >> (memory ? 1 : 0) ); }
-    public Memory bitShr(String memory) { return LongMemory.valueOf( toLong() >> StringMemory.toNumeric(memory).toLong() ); }
+    public Memory bitShr(CharSequence memory) { return LongMemory.valueOf( toLong() >> StringMemory.toNumeric(memory).toLong() ); }
 
     // SHL <<
     public Memory bitShl(Memory memory) { return LongMemory.valueOf( toLong() << memory.toLong() ); }
     public Memory bitShl(long memory) { return LongMemory.valueOf( toLong() << memory ); }
     public Memory bitShl(double memory) { return LongMemory.valueOf( toLong() << (long)memory ); }
     public Memory bitShl(boolean memory) { return LongMemory.valueOf( toLong() << (memory ? 1 : 0) ); }
-    public Memory bitShl(String memory) { return LongMemory.valueOf( toLong() << StringMemory.toNumeric(memory).toLong() ); }
+    public Memory bitShl(CharSequence memory) { return LongMemory.valueOf( toLong() << StringMemory.toNumeric(memory).toLong() ); }
 
 
     // ASSIGN
@@ -392,7 +399,7 @@ abstract public class Memory {
     public Memory assign(long value){ throw new RuntimeException("Invalid assign `long` to " + type); }
     public Memory assign(double value) { throw new RuntimeException("Invalid assign `double` to " + type); }
     public Memory assign(boolean value) { throw new RuntimeException("Invalid assign `bool` to " + type); }
-    public Memory assign(String value){ throw new RuntimeException("Invalid assign `string` to " + type); }
+    public Memory assign(CharSequence value){ throw new RuntimeException("Invalid assign `string` to " + type); }
     public Memory assignRef(Memory memory){ throw new RuntimeException("Invalid assignRef `memory` to " + type); }
 
     public Memory assignRight(Memory memory) { return memory.assign(this); }
@@ -402,70 +409,70 @@ abstract public class Memory {
     public Memory assignConcat(long memory) { return assign(concat(memory)); }
     public Memory assignConcat(double memory) { return assign(concat(memory)); }
     public Memory assignConcat(boolean memory) { return assign(concat(memory)); }
-    public Memory assignConcat(String memory) { return assign(concat(memory)); }
+    public Memory assignConcat(CharSequence memory) { return assign(concat(memory)); }
     public Memory assignConcatRight(Memory memory) { return memory.assign(memory.concat(this)); }
 
     public Memory assignPlus(Memory memory) { return assign(plus(memory)); }
     public Memory assignPlus(long memory) { return assign(plus(memory)); }
     public Memory assignPlus(double memory) { return assign(plus(memory)); }
     public Memory assignPlus(boolean memory) { return assign(plus(memory)); }
-    public Memory assignPlus(String memory) { return assign(plus(memory)); }
+    public Memory assignPlus(CharSequence memory) { return assign(plus(memory)); }
     public Memory assignPlusRight(Memory memory) { return memory.assign(memory.plus(this)); }
 
     public Memory assignMinus(Memory memory) { return assign(minus(memory)); }
     public Memory assignMinus(long memory) { return assign(minus(memory)); }
     public Memory assignMinus(double memory) { return assign(minus(memory)); }
     public Memory assignMinus(boolean memory) { return assign(minus(memory)); }
-    public Memory assignMinus(String memory) { return assign(minus(memory)); }
+    public Memory assignMinus(CharSequence memory) { return assign(minus(memory)); }
     public Memory assignMinusRight(Memory memory) { return memory.assign(memory.minus(this)); }
 
     public Memory assignMul(Memory memory) { return assign(mul(memory)); }
     public Memory assignMul(long memory) { return assign(mul(memory)); }
     public Memory assignMul(double memory) { return assign(mul(memory)); }
     public Memory assignMul(boolean memory) { return assign(mul(memory)); }
-    public Memory assignMul(String memory) { return assign(mul(memory)); }
+    public Memory assignMul(CharSequence memory) { return assign(mul(memory)); }
     public Memory assignMulRight(Memory memory) { return memory.assign(memory.mul(this)); }
 
     public Memory assignDiv(Memory memory) { return assign(div(memory)); }
     public Memory assignDiv(long memory) { return assign(div(memory)); }
     public Memory assignDiv(double memory) { return assign(div(memory)); }
     public Memory assignDiv(boolean memory) { return assign(div(memory)); }
-    public Memory assignDiv(String memory) { return assign(div(memory)); }
+    public Memory assignDiv(CharSequence memory) { return assign(div(memory)); }
     public Memory assignDivRight(Memory memory) { return memory.assign(memory.div(this)); }
 
     public Memory assignMod(Memory memory) { return assign(mod(memory)); }
     public Memory assignMod(long memory) { return assign(mod(memory)); }
     public Memory assignMod(double memory) { return assign(mod(memory)); }
     public Memory assignMod(boolean memory) { return assign(mod(memory)); }
-    public Memory assignMod(String memory) { return assign(mod(memory)); }
+    public Memory assignMod(CharSequence memory) { return assign(mod(memory)); }
     public Memory assignModRight(Memory memory) { return memory.assign(memory.mod(this)); }
 
     public Memory assignBitShr(Memory memory) { return assign(bitShr(memory)); }
     public Memory assignBitShr(long memory) { return assign(bitShr(memory)); }
     public Memory assignBitShr(double memory) { return assign(bitShr(memory)); }
     public Memory assignBitShr(boolean memory) { return assign(bitShr(memory)); }
-    public Memory assignBitShr(String memory) { return assign(bitShr(memory)); }
+    public Memory assignBitShr(CharSequence memory) { return assign(bitShr(memory)); }
     public Memory assignBitShrRight(Memory memory) { return memory.assign(memory.bitShr(this)); }
 
     public Memory assignBitShl(Memory memory) { return assign(bitShl(memory)); }
     public Memory assignBitShl(long memory) { return assign(bitShl(memory)); }
     public Memory assignBitShl(double memory) { return assign(bitShl(memory)); }
     public Memory assignBitShl(boolean memory) { return assign(bitShl(memory)); }
-    public Memory assignBitShl(String memory) { return assign(bitShl(memory)); }
+    public Memory assignBitShl(CharSequence memory) { return assign(bitShl(memory)); }
     public Memory assignBitShlRight(Memory memory) { return memory.assign(memory.bitShl(this)); }
 
     public Memory assignBitAnd(Memory memory) { return assign(bitAnd(memory)); }
     public Memory assignBitAnd(long memory) { return assign(bitAnd(memory)); }
     public Memory assignBitAnd(double memory) { return assign(bitAnd(memory)); }
     public Memory assignBitAnd(boolean memory) { return assign(bitAnd(memory)); }
-    public Memory assignBitAnd(String memory) { return assign(bitAnd(memory)); }
+    public Memory assignBitAnd(CharSequence memory) { return assign(bitAnd(memory)); }
     public Memory assignBitAndRight(Memory memory) { return memory.assign(memory.bitAnd(this)); }
 
     public Memory assignBitOr(Memory memory) { return assign(bitOr(memory)); }
     public Memory assignBitOr(long memory) { return assign(bitOr(memory)); }
     public Memory assignBitOr(double memory) { return assign(bitOr(memory)); }
     public Memory assignBitOr(boolean memory) { return assign(bitOr(memory)); }
-    public Memory assignBitOr(String memory) { return assign(bitOr(memory)); }
+    public Memory assignBitOr(CharSequence memory) { return assign(bitOr(memory)); }
     public Memory assignBitOrRight(Memory memory) { return memory.assign(memory.bitOr(this)); }
 
     public Memory assignBitXor(Memory memory) { return assign(bitXor(memory)); }
@@ -504,25 +511,25 @@ abstract public class Memory {
     public Memory minusRight(long value){ return LongMemory.valueOf(value).minus(this); }
     public Memory minusRight(double value){ return new DoubleMemory(value).minus(this); }
     public Memory minusRight(boolean value){ return LongMemory.valueOf((value ? 1 : 0)).minus(this); }
-    public Memory minusRight(String value){ return StringMemory.toNumeric(value).minus(this); }
+    public Memory minusRight(CharSequence value){ return StringMemory.toNumeric(value).minus(this); }
 
     public Memory divRight(Memory value){ return value.div(this); }
     public Memory divRight(long value){ return LongMemory.valueOf(value).div(this); }
     public Memory divRight(double value){ return new DoubleMemory(value).div(this); }
     public Memory divRight(boolean value){ if(!value) return CONST_INT_0; else return TRUE.div(this); }
-    public Memory divRight(String value){ return StringMemory.toNumeric(value).div(this); }
+    public Memory divRight(CharSequence value){ return StringMemory.toNumeric(value).div(this); }
 
     public Memory modRight(Memory value){ return value.mod(this); }
     public Memory modRight(long value){ return LongMemory.valueOf(value).mod(this); }
     public Memory modRight(double value){ return new DoubleMemory(value).mod(this); }
     public Memory modRight(boolean value){ return LongMemory.valueOf((value ? 1 : 0)).mod(this); }
-    public Memory modRight(String value){ return StringMemory.toNumeric(value).mod(this); }
+    public Memory modRight(CharSequence value){ return StringMemory.toNumeric(value).mod(this); }
 
-    public String concatRight(Memory value) { return value.concat(this); }
-    public String concatRight(long value) { return value + toString(); }
-    public String concatRight(double value) { return value + toString(); }
-    public String concatRight(boolean value) { return boolToString(value) + toString(); }
-    public String concatRight(String value) { return value + toString(); }
+    public CharSequence concatRight(Memory value) { return value.concat(this); }
+    public CharSequence concatRight(long value) { return value + toString(); }
+    public CharSequence concatRight(double value) { return value + toString(); }
+    public CharSequence concatRight(boolean value) { return boolToString(value) + toString(); }
+    public CharSequence concatRight(String value) { return value + toString(); }
 
     public boolean smallerRight(Memory value) { return value.smaller(this); }
     public boolean smallerRight(long value) { return this.greaterEq(value); }

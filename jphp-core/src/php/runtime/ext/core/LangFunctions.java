@@ -211,7 +211,7 @@ public class LangFunctions extends FunctionsContainer {
                     return 0;
                 }
 
-            String prefix = _prefix.isNull() ? "" : _prefix.concat("_");
+            String prefix = _prefix.isNull() ? "" : _prefix.concat("_").toString();
             if (!prefix.isEmpty())
                 if (!GrammarUtils.isValidName(prefix)) {
                     env.warning(trace, "extract(): prefix is not a valid identifier");

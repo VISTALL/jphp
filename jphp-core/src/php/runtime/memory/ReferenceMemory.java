@@ -144,7 +144,7 @@ public class ReferenceMemory extends Memory {
     }
 
     @Override
-    public Memory plus(String value) {
+    public Memory plus(CharSequence value) {
         return this.value.plus(value);
     }
 
@@ -164,7 +164,7 @@ public class ReferenceMemory extends Memory {
     }
 
     @Override
-    public Memory minus(String value) {
+    public Memory minus(CharSequence value) {
         return this.value.minus(value);
     }
 
@@ -194,7 +194,7 @@ public class ReferenceMemory extends Memory {
     }
 
     @Override
-    public Memory mul(String value) {
+    public Memory mul(CharSequence value) {
         return this.value.mul(value);
     }
 
@@ -219,7 +219,7 @@ public class ReferenceMemory extends Memory {
     }
 
     @Override
-    public Memory div(String value) {
+    public Memory div(CharSequence value) {
         return this.value.div(value);
     }
 
@@ -239,7 +239,7 @@ public class ReferenceMemory extends Memory {
     }
 
     @Override
-    public Memory mod(String value) {
+    public Memory mod(CharSequence value) {
         return this.value.mod(value);
     }
 
@@ -264,7 +264,7 @@ public class ReferenceMemory extends Memory {
     }
 
     @Override
-    public boolean equal(String value) {
+    public boolean equal(CharSequence value) {
         return this.value.equal(value);
     }
 
@@ -289,32 +289,32 @@ public class ReferenceMemory extends Memory {
     }
 
     @Override
-    public boolean notEqual(String value) {
+    public boolean notEqual(CharSequence value) {
         return this.value.notEqual(value);
     }
 
     @Override
-    public String concat(Memory memory) {
+    public CharSequence concat(Memory memory) {
         return value.concat(memory);
     }
 
     @Override
-    public String concat(long value) {
+    public CharSequence concat(long value) {
         return this.value.concat(value);
     }
 
     @Override
-    public String concat(double value) {
+    public CharSequence concat(double value) {
         return this.value.concat(value);
     }
 
     @Override
-    public String concat(boolean value) {
+    public CharSequence concat(boolean value) {
         return this.value.concat(value);
     }
 
     @Override
-    public String concat(String value) {
+    public CharSequence concat(CharSequence value) {
         return this.value.concat(value);
     }
 
@@ -339,7 +339,7 @@ public class ReferenceMemory extends Memory {
     }
 
     @Override
-    public boolean smaller(String value) {
+    public boolean smaller(CharSequence value) {
         return this.value.smaller(value);
     }
 
@@ -364,7 +364,7 @@ public class ReferenceMemory extends Memory {
     }
 
     @Override
-    public boolean smallerEq(String value) {
+    public boolean smallerEq(CharSequence value) {
         return this.value.smallerEq(value);
     }
 
@@ -389,7 +389,7 @@ public class ReferenceMemory extends Memory {
     }
 
     @Override
-    public boolean greater(String value) {
+    public boolean greater(CharSequence value) {
         return this.value.greater(value);
     }
 
@@ -414,7 +414,7 @@ public class ReferenceMemory extends Memory {
     }
 
     @Override
-    public boolean greaterEq(String value) {
+    public boolean greaterEq(CharSequence value) {
         return this.value.greaterEq(value);
     }
 
@@ -439,7 +439,7 @@ public class ReferenceMemory extends Memory {
     }
 
     @Override
-    public Memory bitAnd(String memory) {
+    public Memory bitAnd(CharSequence memory) {
         return this.value.bitAnd(memory);
     }
 
@@ -464,7 +464,7 @@ public class ReferenceMemory extends Memory {
     }
 
     @Override
-    public Memory bitOr(String memory) {
+    public Memory bitOr(CharSequence memory) {
         return this.value.bitOr(memory);
     }
 
@@ -489,7 +489,7 @@ public class ReferenceMemory extends Memory {
     }
 
     @Override
-    public Memory bitXor(String memory) {
+    public Memory bitXor(CharSequence memory) {
         return this.value.bitXor(memory);
     }
 
@@ -519,7 +519,7 @@ public class ReferenceMemory extends Memory {
     }
 
     @Override
-    public Memory bitShr(String memory) {
+    public Memory bitShr(CharSequence memory) {
         return this.value.bitShr(memory);
     }
 
@@ -544,7 +544,7 @@ public class ReferenceMemory extends Memory {
     }
 
     @Override
-    public Memory bitShl(String memory) {
+    public Memory bitShl(CharSequence memory) {
         return this.value.bitShl(memory);
     }
 
@@ -643,7 +643,7 @@ public class ReferenceMemory extends Memory {
     }
 
     @Override
-    public Memory assign(String memory) {
+    public Memory assign(CharSequence memory) {
         switch (value.type){
             case REFERENCE: return value.assign(memory);
             case ARRAY: value.unset(); // do not need break!!
@@ -716,7 +716,7 @@ public class ReferenceMemory extends Memory {
         if (value instanceof StringBuilderMemory)
             return (StringBuilderMemory)value;
 
-        StringBuilderMemory builderMemory = new StringBuilderMemory(value.toString());
+        StringBuilderMemory builderMemory = new StringBuilderMemory(value.toCharSequence());
         assign(builderMemory);
         return builderMemory;
     }
@@ -862,7 +862,7 @@ public class ReferenceMemory extends Memory {
     }
 
     @Override
-    public boolean identical(String value) {
+    public boolean identical(CharSequence value) {
         return this.value.identical(value);
     }
 
@@ -904,7 +904,7 @@ public class ReferenceMemory extends Memory {
     }
 
     @Override
-    public Memory assignConcat(String memory) {
+    public Memory assignConcat(CharSequence memory) {
         needStringBuilder().append(memory);
         return this;
     }

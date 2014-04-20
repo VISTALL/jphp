@@ -30,7 +30,7 @@ public class ArrayValueMemory extends ReferenceMemory {
     }
 
     @Override
-    public Memory assign(String memory) {
+    public Memory assign(CharSequence memory) {
         ArrayMemory dup = array.checkCopied();
         if (dup != null) return dup.get(key).assign(memory);
         return super.assign(memory);

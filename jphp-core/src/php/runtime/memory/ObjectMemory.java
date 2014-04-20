@@ -293,7 +293,7 @@ public class ObjectMemory extends Memory {
     }
 
     @Override
-    public boolean identical(String value) {
+    public boolean identical(CharSequence value) {
         return false;
     }
 
@@ -565,7 +565,7 @@ public class ObjectMemory extends Memory {
                 }
 
                 @Override
-                public Memory assign(String memory) {
+                public Memory assign(CharSequence memory) {
                     return assign(StringMemory.valueOf(memory));
                 }
 
@@ -600,7 +600,7 @@ public class ObjectMemory extends Memory {
                 }
 
                 @Override
-                public Memory assignConcat(String memory) {
+                public Memory assignConcat(CharSequence memory) {
                     return assign(toValue().concat(memory));
                 }
 
@@ -629,7 +629,7 @@ public class ObjectMemory extends Memory {
                 }
 
                 @Override
-                public Memory assignPlus(String memory) {
+                public Memory assignPlus(CharSequence memory) {
                     value = toValue();
                     return super.assignPlus(memory);
                 }
@@ -665,7 +665,7 @@ public class ObjectMemory extends Memory {
                 }
 
                 @Override
-                public Memory assignMinus(String memory) {
+                public Memory assignMinus(CharSequence memory) {
                     value = toValue();
                     return super.assignMinus(memory);
                 }
@@ -701,7 +701,7 @@ public class ObjectMemory extends Memory {
                 }
 
                 @Override
-                public Memory assignMul(String memory) {
+                public Memory assignMul(CharSequence memory) {
                     value = toValue();
                     return super.assignMul(memory);
                 }
@@ -737,7 +737,7 @@ public class ObjectMemory extends Memory {
                 }
 
                 @Override
-                public Memory assignDiv(String memory) {
+                public Memory assignDiv(CharSequence memory) {
                     value = toValue();
                     return super.assignDiv(memory);
                 }
@@ -773,7 +773,7 @@ public class ObjectMemory extends Memory {
                 }
 
                 @Override
-                public Memory assignMod(String memory) {
+                public Memory assignMod(CharSequence memory) {
                     value = toValue();
                     return super.assignMod(memory);
                 }
@@ -809,7 +809,7 @@ public class ObjectMemory extends Memory {
                 }
 
                 @Override
-                public Memory assignBitShr(String memory) {
+                public Memory assignBitShr(CharSequence memory) {
                     value = toValue();
                     return super.assignBitShr(memory);
                 }
@@ -845,7 +845,7 @@ public class ObjectMemory extends Memory {
                 }
 
                 @Override
-                public Memory assignBitShl(String memory) {
+                public Memory assignBitShl(CharSequence memory) {
                     value = toValue();
                     return super.assignBitShl(memory);
                 }
@@ -881,7 +881,7 @@ public class ObjectMemory extends Memory {
                 }
 
                 @Override
-                public Memory assignBitAnd(String memory) {
+                public Memory assignBitAnd(CharSequence memory) {
                     value = toValue();
                     return super.assignBitAnd(memory);
                 }
@@ -917,7 +917,7 @@ public class ObjectMemory extends Memory {
                 }
 
                 @Override
-                public Memory assignBitOr(String memory) {
+                public Memory assignBitOr(CharSequence memory) {
                     value = toValue();
                     return super.assignBitOr(memory);
                 }

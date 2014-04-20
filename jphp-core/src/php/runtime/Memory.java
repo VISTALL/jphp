@@ -8,6 +8,7 @@ import php.runtime.lang.IObject;
 import php.runtime.lang.StdClass;
 import php.runtime.memory.*;
 import php.runtime.memory.helper.UndefinedMemory;
+import php.runtime.util.CharSequenceUtil;
 import php.runtime.util.EmptyCharSequence;
 
 abstract public class Memory {
@@ -157,8 +158,8 @@ abstract public class Memory {
     public char toChar(){
         switch (type){
             case STRING:
-                String tmp = toString();
-                if (tmp.isEmpty())
+                CharSequence tmp = toCharSequence();
+                if (CharSequenceUtil.isEmpty(tmp))
                     return '\0';
                 else
                     return tmp.charAt(0);

@@ -22,7 +22,7 @@ abstract public class Memory {
             else if (this == INT)
                 return Long.TYPE;
             else if (this == STRING)
-                return CharSequence.class;
+                return String.class;
             else if (this == BOOL)
                 return Boolean.TYPE;
             else if (this == ARRAY)
